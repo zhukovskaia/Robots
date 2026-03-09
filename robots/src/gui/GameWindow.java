@@ -7,7 +7,7 @@ import javax.swing.JPanel;
 
 public class GameWindow extends JInternalFrame
 {
-    private final GameVisualizer m_visualizer;
+    private final GameVisualizer m_visualizer; // Приватное поле для хранения ссылки на визуализатор игры
     public GameWindow() 
     {
         super("Игровое поле", true, true, true, true);

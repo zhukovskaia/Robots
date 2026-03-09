@@ -1,18 +1,10 @@
 package gui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.Dimension;//размер
+import java.awt.Toolkit;//инфа об экране
 import java.awt.event.KeyEvent;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import log.Logger;
 
@@ -24,37 +16,37 @@ import log.Logger;
  */
 public class MainApplicationFrame extends JFrame
 {
-    private final JDesktopPane desktopPane = new JDesktopPane();
+    private final JDesktopPane desktopPane = new JDesktopPane();//рабочий стол
     
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
-        int inset = 50;        
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int inset = 50;   // отступ
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();// через сист настройки получаем доступ к окну
         setBounds(inset, inset,
             screenSize.width  - inset*2,
             screenSize.height - inset*2);
 
-        setContentPane(desktopPane);
+        setContentPane(desktopPane);// заменяет основную панель окна на нашу
         
         
         LogWindow logWindow = createLogWindow();
-        addWindow(logWindow);
+        addWindow(logWindow);// на рабочий стол добавили окно логов
 
         GameWindow gameWindow = new GameWindow();
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
 
-        setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setJMenuBar(generateMenuBar());//меню вверху
+        setDefaultCloseOperation(EXIT_ON_CLOSE);// выйти при нажатии на крестик
     }
     
     protected LogWindow createLogWindow()
     {
-        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
+        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());//источник сообщений передаем
         logWindow.setLocation(10,10);
         logWindow.setSize(300, 800);
-        setMinimumSize(logWindow.getSize());
+        setMinimumSize(logWindow.getSize());//главное окно не может стать меньше этого размера
         logWindow.pack();
         Logger.debug("Протокол работает");
         return logWindow;
@@ -65,7 +57,7 @@ public class MainApplicationFrame extends JFrame
         desktopPane.add(frame);
         frame.setVisible(true);
     }
-    
+// старый код меню на английском сейчас метод generatrMenuBar()
 //    protected JMenuBar createMenuBar() {
 //        JMenuBar menuBar = new JMenuBar();
 // 
@@ -94,11 +86,38 @@ public class MainApplicationFrame extends JFrame
 // 
 //        return menuBar;
 //    }
-    
+// добавила класс для выхода
+    private void exitApplication(){
+        UIManager.put("OptionPane.yesButtonText", "Да");
+        UIManager.put("OptionPane.noButtonText", "Нет");
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Вы действительно хотите выйти?",
+                "Подтверждение выхода",
+                JOptionPane.YES_NO_OPTION
+        );
+        if ( result == JOptionPane.YES_OPTION){
+            System.exit(0);
+        }
+
+    }
     private JMenuBar generateMenuBar()
     {
         JMenuBar menuBar = new JMenuBar();
-        
+//начала моего кода
+        JMenu fileMenu = new JMenu("Файл");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+
+        JMenuItem exitMenuItem = new JMenuItem("Выход");
+        exitMenuItem.setMnemonic(KeyEvent.VK_X);
+        exitMenuItem.addActionListener((event)-> {
+            System.out.println("Выход из приложения");
+            exitApplication();
+                });
+
+        fileMenu.add(exitMenuItem);
+
+
         JMenu lookAndFeelMenu = new JMenu("Режим отображения");
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
@@ -110,7 +129,7 @@ public class MainApplicationFrame extends JFrame
                 setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 this.invalidate();
             });
-            lookAndFeelMenu.add(systemLookAndFeel);
+            lookAndFeelMenu.add(systemLookAndFeel);    // this.invalidate() - помечает контейнер как требующий перерисовки
         }
 
         {
@@ -124,7 +143,7 @@ public class MainApplicationFrame extends JFrame
 
         JMenu testMenu = new JMenu("Тесты");
         testMenu.setMnemonic(KeyEvent.VK_T);
-        testMenu.getAccessibleContext().setAccessibleDescription(
+        testMenu.getAccessibleContext().setAccessibleDescription(//всплывающая подсказка
                 "Тестовые команды");
         
         {
@@ -135,19 +154,21 @@ public class MainApplicationFrame extends JFrame
             testMenu.add(addLogMessageItem);
         }
 
+        menuBar.add(fileMenu);
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
         return menuBar;
     }
     
-    private void setLookAndFeel(String className)
+    private void setLookAndFeel(String className)//смена оформления
     {
         try
         {
-            UIManager.setLookAndFeel(className);
-            SwingUtilities.updateComponentTreeUI(this);
+            UIManager.setLookAndFeel(className);//меняет тему
+            SwingUtilities.updateComponentTreeUI(this);// updateComponentTreeUI - рекурсивно обновляет все компоненты
+            // this - текущее окно (MainApplicationFrame)
         }
-        catch (ClassNotFoundException | InstantiationException
+        catch (ClassNotFoundException | InstantiationException // Перехват возможных исключений при смене темы
             | IllegalAccessException | UnsupportedLookAndFeelException e)
         {
             // just ignore

@@ -4,10 +4,10 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.Point;//  хранения координат точки (x, y)
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
+import java.awt.geom.AffineTransform; //для трансформации графики (поворот, масштабирование)
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -15,23 +15,23 @@ import javax.swing.JPanel;
 
 public class GameVisualizer extends JPanel
 {
-    private final Timer m_timer = initTimer();
+    private final Timer m_timer = initTimer();  // Timer - класс для выполнения задач по расписанию
     
     private static Timer initTimer() 
     {
         Timer timer = new Timer("events generator", true);
-        return timer;
+        return timer; // true - таймер работает как демон-поток (завершится при завершении программы)
     }
     
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100; 
-    private volatile double m_robotDirection = 0; 
-
+    private volatile double m_robotDirection = 0;
+    // Направление робота в радианах (0 - смотрит направо)
     private volatile int m_targetPositionX = 150;
     private volatile int m_targetPositionY = 100;
     
-    private static final double maxVelocity = 0.1; 
-    private static final double maxAngularVelocity = 0.001; 
+    private static final double maxVelocity = 0.1; //ЛИНЕЙНАЯ
+    private static final double maxAngularVelocity = 0.001;// УГЛОВАЯ
     
     public GameVisualizer() 
     {
