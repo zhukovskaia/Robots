@@ -4,10 +4,10 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;//  хранения координат точки (x, y)
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform; //для трансформации графики (поворот, масштабирование)
+import java.awt.geom.AffineTransform;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -15,18 +15,18 @@ import javax.swing.JPanel;
 
 public class GameVisualizer extends JPanel
 {
-    private final Timer m_timer = initTimer();  // Timer - класс для выполнения задач по расписанию
+    private final Timer m_timer = initTimer();
     
     private static Timer initTimer() 
     {
         Timer timer = new Timer("events generator", true);
-        return timer; // true - таймер работает как демон-поток (завершится при завершении программы)
+        return timer;
     }
     
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100; 
     private volatile double m_robotDirection = 0;
-    // Направление робота в радианах (0 - смотрит направо)
+
     private volatile int m_targetPositionX = 150;
     private volatile int m_targetPositionY = 100;
     
@@ -35,6 +35,7 @@ public class GameVisualizer extends JPanel
     
     public GameVisualizer() 
     {
+
         m_timer.schedule(new TimerTask()
         {
             @Override
@@ -98,7 +99,7 @@ public class GameVisualizer extends JPanel
             return;
         }
         double velocity = maxVelocity;
-        double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
+        double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);// поворачиваем если надо налево направо
         double angularVelocity = 0;
         if (angleToTarget > m_robotDirection)
         {
