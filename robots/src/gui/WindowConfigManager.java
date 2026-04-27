@@ -1,7 +1,7 @@
 package gui;
-
 import java.io.*;
 import java.util.Properties;
+import log.Logger;
 
 public class WindowConfigManager {
     private static final String FILE_NAME = ".game_window_config.properties";
@@ -10,24 +10,28 @@ public class WindowConfigManager {
 
     public WindowConfigManager() {
         file = new File(System.getProperty("user.home"), FILE_NAME);
-        load();
+
     }
 
-    private void load() {
+    public void load() {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 props.load(fis);
-            } catch (IOException ignored) {
-
+                Logger.debug("Конфигурация загружена успешно");
+            } catch (IOException e) {
+                Logger.error("Не удалось загрузить конфигурацию: " + e.getMessage());
             }
+        } else {
+            Logger.debug("Файл конфигурации не найден, используются значения по умолчанию");
         }
     }
 
     public void save() {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             props.store(fos, "Application Window Configuration");
+
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Не удалось сохранить конфигурацию: " + e.getMessage());
         }
     }
 
@@ -36,6 +40,7 @@ public class WindowConfigManager {
         try {
             return val != null ? Integer.parseInt(val) : def;
         } catch (NumberFormatException e) {
+            Logger.error("Неверный формат числа для ключа '" + key + "': " + val);
             return def;
         }
     }

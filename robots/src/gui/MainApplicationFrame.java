@@ -1,8 +1,6 @@
 package gui;
-
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.beans.PropertyVetoException;
 import javax.swing.*;
 import log.Logger;
 
@@ -10,30 +8,33 @@ public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private LogWindow logWindow;
     private GameWindow gameWindow;
-    private final WindowConfigManager config = new WindowConfigManager();
+    private final AppStateManager stateManager = new AppStateManager();
+
+    private static final int DEFAULT_INSET = 50;
+    private static final int DEFAULT_INTERNAL_WIDTH = 600;
+    private static final int DEFAULT_INTERNAL_HEIGHT = 400;
+    private static final int DEFAULT_GAME_X = 10;
+    private static final int DEFAULT_GAME_Y = 10;
+    private static final int DEFAULT_LOG_X = 220;
+    private static final int DEFAULT_LOG_Y = 10;
 
     public MainApplicationFrame() {
-        int inset = 50;
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int defW = screenSize.width - inset * 2;
-        int defH = screenSize.height - inset * 2;
+        stateManager.load();
 
-        setBounds(
-                config.getInt("main.x", inset),
-                config.getInt("main.y", inset),
-                config.getInt("main.w", defW),
-                config.getInt("main.h", defH)
-        );
-        setExtendedState(config.getInt("main.state", JFrame.NORMAL));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int defW = screenSize.width - DEFAULT_INSET * 2;
+        int defH = screenSize.height - DEFAULT_INSET * 2;
+
+        stateManager.restoreMain(this, DEFAULT_INSET, DEFAULT_INSET, defW, defH);
 
         setContentPane(desktopPane);
 
         logWindow = createLogWindow();
-        restoreInternalFrame(logWindow, "log");
+        stateManager.restoreInternalFrame(logWindow, "log", DEFAULT_LOG_X, DEFAULT_LOG_Y, DEFAULT_INTERNAL_WIDTH, DEFAULT_INTERNAL_HEIGHT);
         addWindow(logWindow);
 
         gameWindow = new GameWindow();
-        restoreInternalFrame(gameWindow, "game");
+        stateManager.restoreInternalFrame(gameWindow, "game", DEFAULT_GAME_X, DEFAULT_GAME_Y, DEFAULT_INTERNAL_WIDTH, DEFAULT_INTERNAL_HEIGHT);
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
@@ -45,29 +46,12 @@ public class MainApplicationFrame extends JFrame {
                 exitApplication();
             }
         });
-    }
 
-    private void restoreInternalFrame(JInternalFrame frame, String prefix) {
-        int w = config.getInt(prefix + ".w", frame.getPreferredSize().width);
-        int h = config.getInt(prefix + ".h", frame.getPreferredSize().height);
-        int x = config.getInt(prefix + ".x", 10);
-        int y = config.getInt(prefix + ".y", 10);
-
-        frame.setBounds(x, y, w, h);
-
-        try {
-            if (config.getBool(prefix + ".max", false)) {
-                frame.setMaximum(true);
-            } else if (config.getBool(prefix + ".icon", false)) {
-                frame.setIcon(true);
-            }
-        } catch (PropertyVetoException e) {
-        }
+        Logger.debug("Главное окно инициализировано");
     }
 
     protected LogWindow createLogWindow() {
         LogWindow lw = new LogWindow(Logger.getDefaultLogSource());
-        setMinimumSize(new Dimension(300, 400));
         Logger.debug("Протокол работает");
         return lw;
     }
@@ -78,10 +62,11 @@ public class MainApplicationFrame extends JFrame {
     }
 
     public void exitApplication() {
-        config.saveMain(getX(), getY(), getWidth(), getHeight(), getExtendedState());
-        saveInternalFrame(logWindow, "log");
-        saveInternalFrame(gameWindow, "game");
-        config.save();
+        stateManager.saveMain(this);
+        stateManager.saveAllFrames(desktopPane);
+        stateManager.save();
+
+        Logger.debug("Конфигурация сохранена перед выходом");
 
         UIManager.put("OptionPane.yesButtonText", "Да");
         UIManager.put("OptionPane.noButtonText", "Нет");
@@ -92,12 +77,9 @@ public class MainApplicationFrame extends JFrame {
                 JOptionPane.YES_NO_OPTION
         );
         if (result == JOptionPane.YES_OPTION) {
+            Logger.debug("Приложение закрыто пользователем");
             System.exit(0);
         }
-    }
-
-    private void saveInternalFrame(JInternalFrame frame, String prefix) {
-        config.saveInternal(prefix, frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight(), frame.isIcon(), frame.isMaximum());
     }
 
     private JMenuBar generateMenuBar() {
@@ -108,7 +90,9 @@ public class MainApplicationFrame extends JFrame {
         try {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            Logger.debug("Тема оформления изменена: " + className);
+        } catch (Exception e) {
+            Logger.error("Не удалось установить тему оформления: " + e.getMessage());
         }
     }
 }
