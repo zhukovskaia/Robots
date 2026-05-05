@@ -11,12 +11,12 @@ public class MainApplicationFrame extends JFrame {
     private final AppStateManager stateManager = new AppStateManager();
 
     private static final int DEFAULT_INSET = 50;
-    private static final int DEFAULT_INTERNAL_WIDTH = 600;
-    private static final int DEFAULT_INTERNAL_HEIGHT = 400;
-    private static final int DEFAULT_GAME_X = 10;
-    private static final int DEFAULT_GAME_Y = 10;
-    private static final int DEFAULT_LOG_X = 220;
-    private static final int DEFAULT_LOG_Y = 10;
+    private static final int DEFAULT_INTERNAL_W = 600;
+    private static final int DEFAULT_INTERNAL_H = 400;
+    private static final int DEFAULT_LOG_X = 220, DEFAULT_LOG_Y = 10;
+    private static final int DEFAULT_GAME_X = 10, DEFAULT_GAME_Y = 10;
+    private static final int DEFAULT_INFO_X = 430, DEFAULT_INFO_Y = 10;
+    private static final int DEFAULT_INFO_W = 230, DEFAULT_INFO_H = 110;
 
     public MainApplicationFrame() {
         stateManager.load();
@@ -26,28 +26,33 @@ public class MainApplicationFrame extends JFrame {
         int defH = screenSize.height - DEFAULT_INSET * 2;
 
         stateManager.restoreMain(this, DEFAULT_INSET, DEFAULT_INSET, defW, defH);
-
         setContentPane(desktopPane);
 
         logWindow = createLogWindow();
-        stateManager.restoreInternalFrame(logWindow, "log", DEFAULT_LOG_X, DEFAULT_LOG_Y, DEFAULT_INTERNAL_WIDTH, DEFAULT_INTERNAL_HEIGHT);
+        // Генерируем префикс из заголовка, чтобы он совпадал с сохранением
+        restoreWindowWithAutoPrefix(logWindow, DEFAULT_LOG_X, DEFAULT_LOG_Y, DEFAULT_INTERNAL_W, DEFAULT_INTERNAL_H);
         addWindow(logWindow);
 
         gameWindow = new GameWindow();
-        stateManager.restoreInternalFrame(gameWindow, "game", DEFAULT_GAME_X, DEFAULT_GAME_Y, DEFAULT_INTERNAL_WIDTH, DEFAULT_INTERNAL_HEIGHT);
+        restoreWindowWithAutoPrefix(gameWindow, DEFAULT_GAME_X, DEFAULT_GAME_Y, DEFAULT_INTERNAL_W, DEFAULT_INTERNAL_H);
         addWindow(gameWindow);
 
-        setJMenuBar(generateMenuBar());
+        RobotInfoWindow infoWindow = gameWindow.getInfoWindow();
+        restoreWindowWithAutoPrefix(infoWindow, DEFAULT_INFO_X, DEFAULT_INFO_Y, DEFAULT_INFO_W, DEFAULT_INFO_H);
+        addWindow(infoWindow);
 
+        setJMenuBar(new MenuBarBuilder(this).buildMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                exitApplication();
-            }
+            @Override public void windowClosing(java.awt.event.WindowEvent e) { exitApplication(); }
         });
-
         Logger.debug("Главное окно инициализировано");
+    }
+
+    // Вспомогательный метод: формирует ключ из заголовка окна и восстанавливает состояние
+    private void restoreWindowWithAutoPrefix(JInternalFrame frame, int defX, int defY, int defW, int defH) {
+        String prefix = frame.getTitle().replaceAll("\\s+", "_").toLowerCase();
+        stateManager.restoreInternalFrame(frame, prefix, defX, defY, defW, defH);
     }
 
     protected LogWindow createLogWindow() {
@@ -65,34 +70,22 @@ public class MainApplicationFrame extends JFrame {
         stateManager.saveMain(this);
         stateManager.saveAllFrames(desktopPane);
         stateManager.save();
+        Logger.debug("Конфигурация сохранена");
 
-        Logger.debug("Конфигурация сохранена перед выходом");
-
-        UIManager.put("OptionPane.yesButtonText", "Да");
-        UIManager.put("OptionPane.noButtonText", "Нет");
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                "Вы действительно хотите выйти?",
-                "Подтверждение выхода",
-                JOptionPane.YES_NO_OPTION
-        );
-        if (result == JOptionPane.YES_OPTION) {
-            Logger.debug("Приложение закрыто пользователем");
+        int res = JOptionPane.showConfirmDialog(this, "Вы действительно хотите выйти?", "Выход", JOptionPane.YES_NO_OPTION);
+        if (res == JOptionPane.YES_OPTION) {
+            Logger.debug("Приложение закрыто");
             System.exit(0);
         }
-    }
-
-    private JMenuBar generateMenuBar() {
-        return new MenuBarBuilder(this).buildMenuBar();
     }
 
     public void setLookAndFeel(String className) {
         try {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
-            Logger.debug("Тема оформления изменена: " + className);
+            Logger.debug("Тема изменена: " + className);
         } catch (Exception e) {
-            Logger.error("Не удалось установить тему оформления: " + e.getMessage());
+            Logger.error("Ошибка темы: " + e.getMessage());
         }
     }
 }

@@ -1,4 +1,5 @@
 package gui;
+
 import java.io.*;
 import java.util.Properties;
 import log.Logger;
@@ -10,39 +11,34 @@ public class WindowConfigManager {
 
     public WindowConfigManager() {
         file = new File(System.getProperty("user.home"), FILE_NAME);
-
     }
 
     public void load() {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 props.load(fis);
-                Logger.debug("Конфигурация загружена успешно");
+                Logger.debug("Конфиг загружен");
             } catch (IOException e) {
-                Logger.error("Не удалось загрузить конфигурацию: " + e.getMessage());
+                Logger.error("Ошибка загрузки конфига: " + e.getMessage());
             }
         } else {
-            Logger.debug("Файл конфигурации не найден, используются значения по умолчанию");
+            Logger.debug("Конфиг не найден, используются дефолтные значения");
         }
     }
 
     public void save() {
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            props.store(fos, "Application Window Configuration");
-
+            props.store(fos, "App Config");
+            Logger.debug("Конфиг сохранен");
         } catch (IOException e) {
-            Logger.error("Не удалось сохранить конфигурацию: " + e.getMessage());
+            Logger.error("Ошибка сохранения конфига: " + e.getMessage());
         }
     }
 
     public int getInt(String key, int def) {
         String val = props.getProperty(key);
-        try {
-            return val != null ? Integer.parseInt(val) : def;
-        } catch (NumberFormatException e) {
-            Logger.error("Неверный формат числа для ключа '" + key + "': " + val);
-            return def;
-        }
+        try { return val != null ? Integer.parseInt(val) : def; }
+        catch (NumberFormatException e) { Logger.error("Ошибка парсинга " + key); return def; }
     }
 
     public boolean getBool(String key, boolean def) {
@@ -58,12 +54,12 @@ public class WindowConfigManager {
         props.setProperty("main.state", String.valueOf(state));
     }
 
-    public void saveInternal(String prefix, int x, int y, int w, int h, boolean iconified, boolean maximized) {
+    public void saveInternal(String prefix, int x, int y, int w, int h, boolean icon, boolean max) {
         props.setProperty(prefix + ".x", String.valueOf(x));
         props.setProperty(prefix + ".y", String.valueOf(y));
         props.setProperty(prefix + ".w", String.valueOf(w));
         props.setProperty(prefix + ".h", String.valueOf(h));
-        props.setProperty(prefix + ".icon", String.valueOf(iconified));
-        props.setProperty(prefix + ".max", String.valueOf(maximized));
+        props.setProperty(prefix + ".icon", String.valueOf(icon));
+        props.setProperty(prefix + ".max", String.valueOf(max));
     }
 }

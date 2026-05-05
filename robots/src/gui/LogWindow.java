@@ -9,40 +9,33 @@ import log.LogChangeListener;
 import log.LogEntry;
 import log.LogWindowSource;
 
-public class LogWindow extends JInternalFrame implements LogChangeListener
-{
-    private LogWindowSource m_logSource;
-    private TextArea m_logContent;
+public class LogWindow extends JInternalFrame implements LogChangeListener {
+    private final LogWindowSource source;
+    private final TextArea content;
 
-    public LogWindow(LogWindowSource logSource)
-    {
+    public LogWindow(LogWindowSource source) {
         super("Протокол работы", true, true, true, true);
-        m_logSource = logSource;
-        m_logSource.registerListener(this);
-        m_logContent = new TextArea("");
-        m_logContent.setSize(200, 500);
-
+        this.source = source;
+        source.registerListener(this);
+        content = new TextArea("");
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(m_logContent, BorderLayout.CENTER);
+        panel.add(content, BorderLayout.CENTER);
         getContentPane().add(panel);
         pack();
-        updateLogContent();
+        updateContent();
     }
 
-    private void updateLogContent()
-    {
-        StringBuilder content = new StringBuilder();
-        for (LogEntry entry : m_logSource.all())
-        {
-            content.append(entry.getMessage()).append("\n");
-        }
-        m_logContent.setText(content.toString());
-        m_logContent.invalidate();
+    private void updateContent() {
+        StringBuilder sb = new StringBuilder();
+        for (LogEntry e : source.all()) sb.append(e.getMessage()).append('\n');
+        content.setText(sb.toString());
+        content.invalidate();
     }
 
-    @Override
-    public void onLogChanged()
-    {
-        EventQueue.invokeLater(this::updateLogContent);
+    @Override public void onLogChanged() { EventQueue.invokeLater(this::updateContent); }
+
+    public void close() {
+        source.unregisterListener(this);
+        dispose();
     }
 }
