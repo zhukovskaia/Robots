@@ -1,16 +1,22 @@
 package gui;
+
+import model.RobotModel;
+import log.Logger;
+
+import javax.swing.*;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import javax.swing.*;
-import log.Logger;
 
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private LogWindow logWindow;
     private GameWindow gameWindow;
     private final AppStateManager stateManager = new AppStateManager();
+    private final RobotModel robotModel;
 
     public MainApplicationFrame() {
+        robotModel = new RobotModel();
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int defW = screenSize.width - 100;
         int defH = screenSize.height - 100;
@@ -24,7 +30,7 @@ public class MainApplicationFrame extends JFrame {
                 LogWindow.getDefaultWidth(), LogWindow.getDefaultHeight());
         addWindow(logWindow);
 
-        gameWindow = new GameWindow();
+        gameWindow = new GameWindow(robotModel);
         stateManager.restoreInternalFrame(gameWindow, GameWindow.CONFIG_KEY,
                 GameWindow.getDefaultX(), GameWindow.getDefaultY(),
                 GameWindow.getDefaultWidth(), GameWindow.getDefaultHeight());
@@ -39,7 +45,10 @@ public class MainApplicationFrame extends JFrame {
         setJMenuBar(new MenuBarBuilder(this).buildMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override public void windowClosing(java.awt.event.WindowEvent e) { exitApplication(); }
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                exitApplication();
+            }
         });
         Logger.debug("Главное окно инициализировано");
     }
@@ -50,6 +59,10 @@ public class MainApplicationFrame extends JFrame {
     }
 
     public void exitApplication() {
+        if (gameWindow != null) {
+            gameWindow.shutdown();
+        }
+
         stateManager.saveMain(this);
         stateManager.saveAllFrames(desktopPane);
         stateManager.save();

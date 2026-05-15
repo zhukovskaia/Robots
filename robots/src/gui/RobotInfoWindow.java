@@ -1,4 +1,7 @@
 package gui;
+
+import model.RobotModel;
+
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import javax.swing.JInternalFrame;
@@ -13,10 +16,21 @@ public class RobotInfoWindow extends JInternalFrame implements RobotModel.Observ
 
     public static final String CONFIG_KEY = "robot_info";
 
-    public static int getDefaultWidth() { return 250; }
-    public static int getDefaultHeight() { return 130; }
-    public static int getDefaultX() { return 20; }
-    public static int getDefaultY() { return 490; }
+    public static int getDefaultWidth() {
+        return 250;
+    }
+
+    public static int getDefaultHeight() {
+        return 130;
+    }
+
+    public static int getDefaultX() {
+        return 20;
+    }
+
+    public static int getDefaultY() {
+        return 490;
+    }
 
     public RobotInfoWindow(RobotModel model) {
         super("Координаты робота", true, true, true, true);
@@ -43,9 +57,13 @@ public class RobotInfoWindow extends JInternalFrame implements RobotModel.Observ
         lblDir.setText(String.format("Направление: %.1f°", Math.toDegrees(model.getDir())));
     }
 
-    @Override public void onStateChanged(double x, double y, double dir, int tx, int ty) {
+    @Override
+    public void onStateChanged(double x, double y, double dir, int tx, int ty) {
         EventQueue.invokeLater(this::updateLabels);
     }
 
-    public void close() { model.removeObserver(this); dispose(); }
+    public void close() {
+        model.removeObserver(this);
+        dispose();
+    }
 }
