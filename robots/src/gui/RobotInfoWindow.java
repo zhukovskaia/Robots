@@ -1,5 +1,4 @@
 package gui;
-
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import javax.swing.JInternalFrame;
@@ -11,6 +10,13 @@ public class RobotInfoWindow extends JInternalFrame implements RobotModel.Observ
     private final JLabel lblPos;
     private final JLabel lblTarget;
     private final JLabel lblDir;
+
+    public static final String CONFIG_KEY = "robot_info";
+
+    public static int getDefaultWidth() { return 250; }
+    public static int getDefaultHeight() { return 130; }
+    public static int getDefaultX() { return 20; }
+    public static int getDefaultY() { return 490; }
 
     public RobotInfoWindow(RobotModel model) {
         super("Координаты робота", true, true, true, true);
@@ -27,27 +33,19 @@ public class RobotInfoWindow extends JInternalFrame implements RobotModel.Observ
         panel.add(lblDir, BorderLayout.SOUTH);
         getContentPane().add(panel);
         pack();
-        setSize(230, 110);
-
-        // Вызываем метод обновления меток
+        setSize(getDefaultWidth(), getDefaultHeight());
         updateLabels();
     }
 
-    // Переименовано из updateUI, чтобы не конфликтовать со системным методом Swing
     private void updateLabels() {
         lblPos.setText(String.format("Позиция: (%.1f, %.1f)", model.getX(), model.getY()));
         lblTarget.setText(String.format("Цель: (%d, %d)", model.getTargetX(), model.getTargetY()));
         lblDir.setText(String.format("Направление: %.1f°", Math.toDegrees(model.getDir())));
     }
 
-    @Override
-    public void onStateChanged(double x, double y, double dir, int tx, int ty) {
-        // Обновляем метки в потоке событий при изменении модели
+    @Override public void onStateChanged(double x, double y, double dir, int tx, int ty) {
         EventQueue.invokeLater(this::updateLabels);
     }
 
-    public void close() {
-        model.removeObserver(this);
-        dispose();
-    }
+    public void close() { model.removeObserver(this); dispose(); }
 }

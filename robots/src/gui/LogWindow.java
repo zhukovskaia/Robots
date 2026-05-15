@@ -1,5 +1,4 @@
 package gui;
-
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.TextArea;
@@ -12,6 +11,13 @@ import log.LogWindowSource;
 public class LogWindow extends JInternalFrame implements LogChangeListener {
     private final LogWindowSource source;
     private final TextArea content;
+
+    public static final String CONFIG_KEY = "log";
+
+    public static int getDefaultWidth() { return 350; }
+    public static int getDefaultHeight() { return 600; }
+    public static int getDefaultX() { return 640; }
+    public static int getDefaultY() { return 20; }
 
     public LogWindow(LogWindowSource source) {
         super("Протокол работы", true, true, true, true);

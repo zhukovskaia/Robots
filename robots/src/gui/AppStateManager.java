@@ -1,5 +1,4 @@
 package gui;
-
 import java.beans.PropertyVetoException;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -10,44 +9,38 @@ public class AppStateManager {
     private final WindowConfigManager configManager;
 
     public AppStateManager() {
-        this.configManager = new WindowConfigManager();
+        this.configManager = WindowConfigManager.create();
     }
 
-    public void load() {
-        configManager.load();
-        Logger.debug("Менеджер состояний: загрузка конфигурации запущена");
-    }
+    public void save() { configManager.save(); }
 
-    public void save() {
-        configManager.save();
-    }
-
-    public void restoreMain(JFrame mainFrame, int defaultX, int defaultY, int defaultW, int defaultH) {
+    public void restoreMain(JFrame mainFrame, int defX, int defY, int defW, int defH) {
         mainFrame.setBounds(
-                configManager.getInt("main.x", defaultX),
-                configManager.getInt("main.y", defaultY),
-                configManager.getInt("main.w", defaultW),
-                configManager.getInt("main.h", defaultH)
+                configManager.getInt("main.x", defX),
+                configManager.getInt("main.y", defY),
+                configManager.getInt("main.w", defW),
+                configManager.getInt("main.h", defH)
         );
         mainFrame.setExtendedState(configManager.getInt("main.state", JFrame.NORMAL));
     }
 
-    public void restoreInternalFrame(JInternalFrame frame, String prefix, int defaultX, int defaultY, int defaultW, int defaultH) {
-        int w = configManager.getInt(prefix + ".w", defaultW);
-        int h = configManager.getInt(prefix + ".h", defaultH);
-        int x = configManager.getInt(prefix + ".x", defaultX);
-        int y = configManager.getInt(prefix + ".y", defaultY);
+
+    public void restoreInternalFrame(JInternalFrame frame, String stableKey, int defX, int defY, int defW, int defH) {
+        int w = configManager.getInt(stableKey + ".w", defW);
+        int h = configManager.getInt(stableKey + ".h", defH);
+        int x = configManager.getInt(stableKey + ".x", defX);
+        int y = configManager.getInt(stableKey + ".y", defY);
 
         frame.setBounds(x, y, w, h);
 
         try {
-            if (configManager.getBool(prefix + ".max", false)) {
+            if (configManager.getBool(stableKey + ".max", false)) {
                 frame.setMaximum(true);
-            } else if (configManager.getBool(prefix + ".icon", false)) {
+            } else if (configManager.getBool(stableKey + ".icon", false)) {
                 frame.setIcon(true);
             }
         } catch (PropertyVetoException e) {
-            Logger.error("Не удалось восстановить состояние окна '" + prefix + "': " + e.getMessage());
+            Logger.error("Не удалось восстановить окно " + stableKey);
         }
     }
 
@@ -59,18 +52,23 @@ public class AppStateManager {
         );
     }
 
-    public void saveInternalFrame(JInternalFrame frame, String prefix) {
-        configManager.saveInternal(prefix,
-                frame.getX(), frame.getY(),
-                frame.getWidth(), frame.getHeight(),
-                frame.isIcon(), frame.isMaximum()
-        );
-    }
-
     public void saveAllFrames(JDesktopPane desktopPane) {
         for (JInternalFrame frame : desktopPane.getAllFrames()) {
-            String prefix = frame.getTitle().replaceAll("\\s+", "_").toLowerCase();
-            saveInternalFrame(frame, prefix);
+            String key = getStableKey(frame);
+            if (key != null) {
+                configManager.saveInternal(key,
+                        frame.getX(), frame.getY(),
+                        frame.getWidth(), frame.getHeight(),
+                        frame.isIcon(), frame.isMaximum());
+            }
         }
+    }
+
+
+    private String getStableKey(JInternalFrame frame) {
+        if (frame instanceof GameWindow) return GameWindow.CONFIG_KEY;
+        if (frame instanceof LogWindow) return LogWindow.CONFIG_KEY;
+        if (frame instanceof RobotInfoWindow) return RobotInfoWindow.CONFIG_KEY;
+        return null;
     }
 }

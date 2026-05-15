@@ -1,5 +1,4 @@
 package gui;
-
 import java.io.*;
 import java.util.Properties;
 import log.Logger;
@@ -9,11 +8,19 @@ public class WindowConfigManager {
     private final Properties props = new Properties();
     private final File file;
 
-    public WindowConfigManager() {
+
+    private WindowConfigManager() {
         file = new File(System.getProperty("user.home"), FILE_NAME);
     }
 
-    public void load() {
+
+    public static WindowConfigManager create() {
+        WindowConfigManager config = new WindowConfigManager();
+        config.load();
+        return config;
+    }
+
+    private void load() {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 props.load(fis);
