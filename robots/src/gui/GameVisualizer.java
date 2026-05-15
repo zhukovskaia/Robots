@@ -16,10 +16,10 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
 
     public GameVisualizer(RobotModel model) {
         this.model = model;
-        model.addObserver(this); // Подписываемся на обновления модели
+        model.addObserver(this);
         setDoubleBuffered(true);
 
-        // Клик обрабатываем напрямую здесь -> координаты гарантированно локальные
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -40,7 +40,7 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
         int ry = (int) Math.round(model.getY());
         double dir = model.getDir();
 
-        // Сначала цель, потом робот (чтобы робот был сверху)
+
         drawTarget(g2d, tx, ty);
         drawRobot(g2d, rx, ry, dir);
     }
@@ -58,7 +58,7 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
             g.setColor(Color.BLACK);
             g.drawOval(x + 5, y - 2, 5, 5);
         } finally {
-            g.setTransform(old); // Обязательно возвращаем трансформацию
+            g.setTransform(old);
         }
     }
 
@@ -71,6 +71,6 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
 
     @Override
     public void onStateChanged(double x, double y, double dir, int tx, int ty) {
-        repaint(); // Перерисовка при каждом изменении модели
+        repaint();
     }
 }
