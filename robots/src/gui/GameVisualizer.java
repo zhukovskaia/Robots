@@ -6,8 +6,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import javax.swing.JPanel;
 
@@ -18,14 +16,6 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
         this.model = model;
         model.addObserver(this);
         setDoubleBuffered(true);
-
-
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                model.setTarget(e.getX(), e.getY());
-            }
-        });
     }
 
     @Override
@@ -39,7 +29,6 @@ public class GameVisualizer extends JPanel implements RobotModel.Observer {
         int rx = (int) Math.round(model.getX());
         int ry = (int) Math.round(model.getY());
         double dir = model.getDir();
-
 
         drawTarget(g2d, tx, ty);
         drawRobot(g2d, rx, ry, dir);

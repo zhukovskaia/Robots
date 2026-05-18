@@ -1,11 +1,9 @@
 package gui;
-
-import controller.RobotController;
-import model.RobotModel;
-
 import java.awt.BorderLayout;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
+import controller.RobotController;
+import model.RobotModel;
 
 public class GameWindow extends JInternalFrame {
     private final RobotModel model;
@@ -20,19 +18,20 @@ public class GameWindow extends JInternalFrame {
     public static int getDefaultX() { return 20; }
     public static int getDefaultY() { return 20; }
 
+
     public GameWindow(RobotModel model) {
         super("Игровое поле", true, true, true, true);
         this.model = model;
+
         this.visualizer = new GameVisualizer(model);
         this.infoWindow = new RobotInfoWindow(model);
-        this.controller = new RobotController(model);
+        this.controller = new RobotController(model, visualizer);
+        controller.start();
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(visualizer, BorderLayout.CENTER);
         getContentPane().add(panel);
         pack();
-
-        controller.start();
     }
 
     public RobotInfoWindow getInfoWindow() {

@@ -8,19 +8,11 @@ public class WindowConfigManager {
     private final Properties props = new Properties();
     private final File file;
 
-
-    private WindowConfigManager() {
+    public WindowConfigManager() {
         file = new File(System.getProperty("user.home"), FILE_NAME);
     }
 
-
-    public static WindowConfigManager create() {
-        WindowConfigManager config = new WindowConfigManager();
-        config.load();
-        return config;
-    }
-
-    private void load() {
+    public void load() {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 props.load(fis);

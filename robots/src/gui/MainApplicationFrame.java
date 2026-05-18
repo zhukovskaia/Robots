@@ -1,56 +1,66 @@
 package gui;
-
-import model.RobotModel;
-import log.Logger;
-
-import javax.swing.*;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import javax.swing.*;
+import log.Logger;
+import model.RobotModel;
 
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private LogWindow logWindow;
     private GameWindow gameWindow;
     private final AppStateManager stateManager = new AppStateManager();
-    private final RobotModel robotModel;
+
+    private final RobotModel robotModel = new RobotModel();
+
+    private static final int DEFAULT_INSET = 50;
+    private static final int DEFAULT_INTERNAL_W = 600;
+    private static final int DEFAULT_INTERNAL_H = 400;
+    private static final int DEFAULT_LOG_X = 220, DEFAULT_LOG_Y = 10;
+    private static final int DEFAULT_GAME_X = 10, DEFAULT_GAME_Y = 10;
+    private static final int DEFAULT_INFO_X = 430, DEFAULT_INFO_Y = 10;
+    private static final int DEFAULT_INFO_W = 230, DEFAULT_INFO_H = 110;
 
     public MainApplicationFrame() {
-        robotModel = new RobotModel();
+        stateManager.load();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int defW = screenSize.width - 100;
-        int defH = screenSize.height - 100;
+        int defW = screenSize.width - DEFAULT_INSET * 2;
+        int defH = screenSize.height - DEFAULT_INSET * 2;
 
-        stateManager.restoreMain(this, 50, 50, defW, defH);
+        stateManager.restoreMain(this, DEFAULT_INSET, DEFAULT_INSET, defW, defH);
         setContentPane(desktopPane);
 
-        logWindow = new LogWindow(Logger.getDefaultLogSource());
-        stateManager.restoreInternalFrame(logWindow, LogWindow.CONFIG_KEY,
-                LogWindow.getDefaultX(), LogWindow.getDefaultY(),
-                LogWindow.getDefaultWidth(), LogWindow.getDefaultHeight());
+        logWindow = createLogWindow();
+        restoreWindowWithAutoPrefix(logWindow, DEFAULT_LOG_X, DEFAULT_LOG_Y, DEFAULT_INTERNAL_W, DEFAULT_INTERNAL_H);
         addWindow(logWindow);
 
+
         gameWindow = new GameWindow(robotModel);
-        stateManager.restoreInternalFrame(gameWindow, GameWindow.CONFIG_KEY,
-                GameWindow.getDefaultX(), GameWindow.getDefaultY(),
-                GameWindow.getDefaultWidth(), GameWindow.getDefaultHeight());
+        restoreWindowWithAutoPrefix(gameWindow, DEFAULT_GAME_X, DEFAULT_GAME_Y, DEFAULT_INTERNAL_W, DEFAULT_INTERNAL_H);
         addWindow(gameWindow);
 
         RobotInfoWindow infoWindow = gameWindow.getInfoWindow();
-        stateManager.restoreInternalFrame(infoWindow, RobotInfoWindow.CONFIG_KEY,
-                RobotInfoWindow.getDefaultX(), RobotInfoWindow.getDefaultY(),
-                RobotInfoWindow.getDefaultWidth(), RobotInfoWindow.getDefaultHeight());
+        restoreWindowWithAutoPrefix(infoWindow, DEFAULT_INFO_X, DEFAULT_INFO_Y, DEFAULT_INFO_W, DEFAULT_INFO_H);
         addWindow(infoWindow);
 
         setJMenuBar(new MenuBarBuilder(this).buildMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                exitApplication();
-            }
+            @Override public void windowClosing(java.awt.event.WindowEvent e) { exitApplication(); }
         });
         Logger.debug("Главное окно инициализировано");
+    }
+
+    private void restoreWindowWithAutoPrefix(JInternalFrame frame, int defX, int defY, int defW, int defH) {
+        String prefix = frame.getTitle().replaceAll("\\s+", "_").toLowerCase();
+        stateManager.restoreInternalFrame(frame, prefix, defX, defY, defW, defH);
+    }
+
+    protected LogWindow createLogWindow() {
+        LogWindow lw = new LogWindow(Logger.getDefaultLogSource());
+        Logger.debug("Протокол работает");
+        return lw;
     }
 
     protected void addWindow(JInternalFrame frame) {
@@ -59,10 +69,6 @@ public class MainApplicationFrame extends JFrame {
     }
 
     public void exitApplication() {
-        if (gameWindow != null) {
-            gameWindow.shutdown();
-        }
-
         stateManager.saveMain(this);
         stateManager.saveAllFrames(desktopPane);
         stateManager.save();
