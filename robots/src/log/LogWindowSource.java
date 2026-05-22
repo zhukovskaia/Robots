@@ -1,61 +1,60 @@
 package log;
 
+import utils.collections.CyclicLogQueue;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
-public class LogWindowSource {
-    private final int maxQueueLength;
-    private final List<LogEntry> messages = new ArrayList<>();
-    private final List<LogChangeListener> listeners = new ArrayList<>();
-    private volatile LogChangeListener[] activeListeners;
+public class LogWindowSource implements Iterable<LogEntry> {
+    private final CyclicLogQueue<LogEntry> entryQueue;
+    private final List<LogChangeListener> subscriberList = new ArrayList<>();
+    private volatile LogChangeListener[] cachedSubscribers;
 
-    public LogWindowSource(int queueLength) {
-        this.maxQueueLength = queueLength;
+    public LogWindowSource(int maxLength) {
+        this.entryQueue = new CyclicLogQueue<>(maxLength);
     }
 
-    public void registerListener(LogChangeListener listener) {
-        synchronized(listeners) {
-            listeners.add(listener);
-            activeListeners = null;
+    public void registerListener(LogChangeListener target) {
+        synchronized(subscriberList) {
+            subscriberList.add(target);
+            cachedSubscribers = null;
         }
     }
 
-    public void unregisterListener(LogChangeListener listener) {
-        synchronized(listeners) {
-            listeners.remove(listener);
-            activeListeners = null;
+    public void unregisterListener(LogChangeListener target) {
+        synchronized(subscriberList) {
+            subscriberList.remove(target);
+            cachedSubscribers = null;
         }
     }
 
-    public void append(LogLevel level, String message) {
-        synchronized(listeners) {
-            messages.add(new LogEntry(level, message));
-            while (messages.size() > maxQueueLength) messages.remove(0);
-        }
-        notifyListeners();
+    public void append(LogLevel severity, String text) {
+        entryQueue.offer(new LogEntry(severity, text));
+        dispatchUpdate();
     }
 
-    private void notifyListeners() {
-        LogChangeListener[] current = activeListeners;
-        if (current == null) {
-            synchronized(listeners) {
-                if (activeListeners == null) {
-                    current = listeners.toArray(new LogChangeListener[0]);
-                    activeListeners = current;
+    private void dispatchUpdate() {
+        LogChangeListener[] active = cachedSubscribers;
+        if (active == null) {
+            synchronized(subscriberList) {
+                if (cachedSubscribers == null) {
+                    active = subscriberList.toArray(new LogChangeListener[0]);
+                    cachedSubscribers = active;
                 }
             }
         }
-        for (LogChangeListener l : current) {
-            try { l.onLogChanged(); } catch (Exception ignored) {}
+        for (LogChangeListener sub : active) {
+            try { sub.onLogChanged(); } catch (Exception ignored) {}
         }
     }
 
-    public int size() { return messages.size(); }
-    public Iterable<LogEntry> all() { return new ArrayList<>(messages); }
-    public Iterable<LogEntry> range(int from, int count) {
-        if (from < 0 || from >= messages.size()) return Collections.emptyList();
-        int to = Math.min(from + count, messages.size());
-        return messages.subList(from, to);
+    public int size() { return entryQueue.size(); }
+    public Iterable<LogEntry> all() { return entryQueue; }
+    public Iterable<LogEntry> range(int startIndex, int count) {
+        return entryQueue.fetchSegment(startIndex, count);
     }
+
+    @Override
+    public Iterator<LogEntry> iterator() { return entryQueue.iterator(); }
 }
