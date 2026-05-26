@@ -1,43 +1,54 @@
 package gui;
+
 import java.io.*;
 import java.util.Properties;
 import log.Logger;
+import utils.i18n.LocaleManager;
 
 public class WindowConfigManager {
     private static final String FILE_NAME = ".game_window_config.properties";
     private final Properties props = new Properties();
     private final File file;
 
-    public WindowConfigManager() {
+    private WindowConfigManager() {
         file = new File(System.getProperty("user.home"), FILE_NAME);
     }
 
-    public void load() {
+    public static WindowConfigManager create() {
+        WindowConfigManager config = new WindowConfigManager();
+        config.load();
+        return config;
+    }
+
+    private void load() {
         if (file.exists()) {
             try (FileInputStream fis = new FileInputStream(file)) {
                 props.load(fis);
-                Logger.debug("Конфиг загружен");
+                Logger.debug(LocaleManager.get("log.config_loaded"));
             } catch (IOException e) {
-                Logger.error("Ошибка загрузки конфига: " + e.getMessage());
+                Logger.error(LocaleManager.format("log.config_load_error", e.getMessage()));
             }
         } else {
-            Logger.debug("Конфиг не найден, используются дефолтные значения");
+            Logger.debug(LocaleManager.get("log.config_not_found"));
         }
     }
 
     public void save() {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             props.store(fos, "App Config");
-            Logger.debug("Конфиг сохранен");
+            Logger.debug(LocaleManager.get("log.config_saved"));
         } catch (IOException e) {
-            Logger.error("Ошибка сохранения конфига: " + e.getMessage());
+            Logger.error(LocaleManager.format("log.config_save_error", e.getMessage()));
         }
     }
 
     public int getInt(String key, int def) {
         String val = props.getProperty(key);
         try { return val != null ? Integer.parseInt(val) : def; }
-        catch (NumberFormatException e) { Logger.error("Ошибка парсинга " + key); return def; }
+        catch (NumberFormatException e) {
+            Logger.error(LocaleManager.format("log.parse_error", key));
+            return def;
+        }
     }
 
     public boolean getBool(String key, boolean def) {
